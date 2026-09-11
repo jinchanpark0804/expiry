@@ -26,6 +26,7 @@
   /* ===== 홈 ===== */
   .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
   .top h1{font-size:21px;font-weight:700;margin:0;letter-spacing:-.02em}
+  .top h1 #ver{font-size:13px;font-weight:600;color:var(--dim);letter-spacing:0}
   .top .n{font-size:15px;color:var(--dim);font-weight:600}
   .big{
     flex:1;min-height:34vh;margin:18px 0;border:none;border-radius:26px;background:var(--go);color:#fff;
@@ -147,7 +148,7 @@
 
 <!-- 홈 -->
 <section class="pane on" id="home">
-  <div class="top"><h1>유통기한 정리</h1><div class="n" id="cnt">0개</div></div>
+  <div class="top"><h1>유통기한 정리 <span id="ver"></span></h1><div class="n" id="cnt">0개</div></div>
   <button class="big" id="go">
     <svg viewBox="0 0 100 100"><path d="M12 32V16h16M88 32V16H72M12 68v16h16M88 68v16H72M26 50h48"/></svg>
     바코드 찍기
@@ -230,6 +231,7 @@
 
 <script>
 const $=s=>document.querySelector(s);
+const VER='v4';            /* 배포할 때마다 이 값을 바꾸면 반영 여부를 눈으로 확인 가능 */
 const KEY='expiry.simple.v1', DKEY='expiry.lastDate';
 let rows=[], code='', lastDate='', usedLast=false;
 
@@ -504,6 +506,7 @@ $('#send').onclick=async()=>{
 $('#helpOk').onclick=()=>{$('#help').classList.remove('on');try{localStorage.setItem('expiry.seen','1')}catch(e){}};
 try{ if(!localStorage.getItem('expiry.seen'))$('#help').classList.add('on'); }catch(e){}
 
+$('#ver').textContent='('+VER+')';
 load();refresh();
 window.addEventListener('pagehide',closeCam);
 </script>
