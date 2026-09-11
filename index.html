@@ -61,9 +61,10 @@
     font-size:clamp(20px,6vw,24px);font-weight:700;text-align:center;font-variant-numeric:tabular-nums
   }
   input[type=date]:focus{outline:none;border-color:var(--go)}
-  .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+  .chips{display:grid;grid-template-columns:1fr 1fr 1.5fr 1.5fr;gap:7px;margin-top:9px}
   .chips button{padding:14px 2px;border:1px solid var(--line);background:#fff;border-radius:13px;
     font-size:clamp(13px,3.8vw,15px);font-weight:700;white-space:nowrap}
+  .chips button.day{font-size:26px;font-weight:600;line-height:1;color:var(--go);padding:10px 2px}
   .chips button:active{background:#EFE9E2}
   .left{margin:9px 2px 0;font-size:15px;font-weight:700;color:var(--dim);min-height:22px}
   .left.warn{color:var(--hot)}
@@ -102,9 +103,19 @@
   }
   .aimwrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
   .aim{
-    width:min(80vw,52vh);height:min(80vw,52vh);
-    border:4px solid #fff;border-radius:22px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)
+    width:min(78vw,58vh);height:calc(min(78vw,58vh) * .64);
+    border:4px solid #fff;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.62)
   }
+  #mark{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  #cam.hold .aimwrap{visibility:hidden}
+  .ovl.confirm{display:none}
+  #cam.hold .ovl.scan{display:none}
+  #cam.hold .ovl.confirm{display:flex}
+  .cwrap{flex:1;display:flex;align-items:flex-end;justify-content:center;width:100%;min-height:0;padding-bottom:8px}
+  .cbox{background:rgba(20,17,15,.9);border:2px solid #3CE08E;border-radius:18px;padding:14px 18px;max-width:100%;text-align:center}
+  .cbox em{display:block;font-style:normal;font-size:14px;font-weight:700;color:#9BE9BF;margin-bottom:6px}
+  .cnum{color:#fff;font-size:clamp(22px,7vw,30px);font-weight:800;letter-spacing:.02em;
+    font-variant-numeric:tabular-nums;word-break:break-all;line-height:1.25}
   .say{
     color:#fff;font-size:clamp(15px,4.4vw,18px);font-weight:700;text-align:center;
     margin:16px 0 12px;text-shadow:0 2px 6px rgba(0,0,0,.7);flex:none
@@ -153,10 +164,10 @@
   <div class="q">유통기한</div>
   <input type="date" id="date">
   <div class="chips">
+    <button class="day" data-d="-1" aria-label="하루 앞으로">−</button>
+    <button class="day" data-d="1" aria-label="하루 뒤로">+</button>
     <button data-m="1">1개월 뒤</button>
     <button data-m="6">6개월 뒤</button>
-    <button data-m="12">1년 뒤</button>
-    <button data-m="24">2년 뒤</button>
   </div>
   <div class="left" id="left"></div>
 
@@ -182,12 +193,24 @@
 <!-- 카메라 -->
 <div id="cam">
   <video id="video" playsinline muted></video>
-  <div class="ovl">
+  <canvas id="mark"></canvas>
+  <div class="ovl scan">
     <div class="aimwrap"><div class="aim" id="aim"></div></div>
-    <div class="say" id="say">상자 안에 바코드를 넣어 주세요</div>
+    <div class="say" id="say">상자 안에 바코드 하나만 넣어 주세요</div>
     <div class="camfoot">
       <button class="a" id="camClose">그만 찍기</button>
       <button class="b" id="camManual">잘 안 읽혀요 · 손으로 입력</button>
+    </div>
+  </div>
+  <div class="ovl confirm">
+    <div class="cwrap"><div class="cbox">
+      <em>초록 테두리 친 바코드를 읽었어요</em>
+      <div class="cnum" id="cnum">-</div>
+    </div></div>
+    <div class="say">제품에 적힌 숫자와 같은지 봐 주세요</div>
+    <div class="camfoot">
+      <button class="a" id="cyes">네, 맞아요</button>
+      <button class="b" id="cno">아니요 · 다시 찍기</button>
     </div>
   </div>
 </div>
@@ -256,77 +279,129 @@ const XL=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
 const FMT=['qr_code','data_matrix','pdf417','aztec','code_128','code_39','ean_13','ean_8','itf','codabar','upc_a','upc_e'];
 
 /* 카메라 */
-let stream=null,raf=0,zx=null,tipT=0,tick=0;
+let stream=null,raf=0,zx=null,tipT=0,det=null,pending='';
 const cv=document.createElement('canvas'), cx=cv.getContext('2d',{willReadFrequently:true});
+let crop={sx:0,sy:0,k:1,scale:1,offX:0,offY:0,left:0,top:0};
+const mk=()=>document.getElementById('mark');
+let mx=null;
 
-/* 화면의 흰 사각형 영역만 잘라 적당한 크기로 줄여서 인식에 사용 */
+function sizeMark(){
+  const m=mk(), r=m.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  m.width=Math.round(r.width*dpr); m.height=Math.round(r.height*dpr);
+  mx=m.getContext('2d'); mx.setTransform(dpr,0,0,dpr,0,0);
+}
+function clearMark(){ if(mx)mx.clearRect(0,0,mk().width,mk().height); }
+function drawMark(pts){
+  if(!mx||!pts||pts.length<3)return;
+  mx.clearRect(0,0,mk().width,mk().height);
+  mx.beginPath();
+  pts.forEach((p,i)=>{ const x=crop.left+crop.offX+(crop.sx+p.x/crop.k)*crop.scale;
+                       const y=crop.top+crop.offY+(crop.sy+p.y/crop.k)*crop.scale;
+                       i?mx.lineTo(x,y):mx.moveTo(x,y); });
+  mx.closePath();
+  mx.fillStyle='rgba(60,224,142,.22)'; mx.fill();
+  mx.lineWidth=5; mx.strokeStyle='#3CE08E'; mx.lineJoin='round'; mx.stroke();
+}
+
+/* 흰 사각형 안쪽만 잘라서 인식 (바깥 제품은 아예 안 봄) */
 function cropAim(v){
   const vw=v.videoWidth, vh=v.videoHeight;
   if(!vw||!vh) return null;
-  const vr=v.getBoundingClientRect(), ar=$('#aim').getBoundingClientRect();
-  const scale=Math.max(vr.width/vw, vr.height/vh);           // object-fit:cover
+  const vr=v.getBoundingClientRect(), ar=document.getElementById('aim').getBoundingClientRect();
+  const scale=Math.max(vr.width/vw, vr.height/vh);
   const offX=(vr.width-vw*scale)/2, offY=(vr.height-vh*scale)/2;
-  const pad=0.12;
-  let sw=ar.width/scale*(1+pad*2), sh=ar.height/scale*(1+pad*2);
-  let sx=(ar.left-vr.left-offX)/scale-ar.width/scale*pad;
-  let sy=(ar.top-vr.top-offY)/scale-ar.height/scale*pad;
+  let sx=(ar.left-vr.left-offX)/scale, sy=(ar.top-vr.top-offY)/scale;
+  let sw=ar.width/scale, sh=ar.height/scale;
   sx=Math.max(0,Math.min(sx,vw-1)); sy=Math.max(0,Math.min(sy,vh-1));
   sw=Math.min(sw,vw-sx); sh=Math.min(sh,vh-sy);
   if(sw<40||sh<40) return null;
-  const cap=1400, k=Math.min(1,cap/Math.max(sw,sh));          // 너무 크면 축소
+  const k=Math.min(1,1400/Math.max(sw,sh));
   cv.width=Math.round(sw*k); cv.height=Math.round(sh*k);
   cx.drawImage(v,sx,sy,sw,sh,0,0,cv.width,cv.height);
+  crop={sx:sx,sy:sy,k:k,scale:scale,offX:offX,offY:offY,left:vr.left,top:vr.top};
   return cv;
 }
 
+function startLoop(){
+  const v=$('#video');
+  if(!det||!stream)return;
+  (async function loop(){
+    if(!stream||$('#cam').classList.contains('hold'))return;
+    try{
+      const c=cropAim(v);
+      if(c){
+        const r=await det.detect(c);
+        if(r&&r.length&&r[0].rawValue) return found(r[0].rawValue, r[0].cornerPoints);
+      }
+    }catch(e){}
+    raf=requestAnimationFrame(loop);
+  })();
+}
+
 async function openCam(){
-  $('#cam').classList.add('on');
-  $('#say').textContent='카메라를 켜는 중...';
+  $('#cam').classList.add('on'); $('#cam').classList.remove('hold');
+  clearMark(); $('#say').textContent='카메라를 켜는 중...';
   try{
     stream=await navigator.mediaDevices.getUserMedia({
       video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
   }catch(e){ closeCam(); toast('카메라를 켤 수 없어요'); return; }
   const v=$('#video'); v.srcObject=stream; await v.play();
-  $('#say').textContent='상자 안에 바코드를 넣어 주세요';
+  sizeMark();
+  $('#say').textContent='상자 안에 바코드 하나만 넣어 주세요';
   clearTimeout(tipT);
-  tipT=setTimeout(()=>{if(stream)$('#say').textContent='천천히 가까이·멀리 움직여 보세요'},7000);
+  tipT=setTimeout(()=>{if(stream&&!$('#cam').classList.contains('hold'))
+    $('#say').textContent='천천히 가까이·멀리 움직여 보세요'},7000);
 
   if('BarcodeDetector' in window){
-    let f=FMT; try{const s=await BarcodeDetector.getSupportedFormats();f=FMT.filter(x=>s.includes(x))}catch(e){}
-    const det=new BarcodeDetector(f.length?{formats:f}:undefined);
-    tick=0;
-    (async function loop(){
-      if(!stream)return;
-      try{
-        let src=v;
-        if(tick++%2===0){ const c=cropAim(v); if(c) src=c; }   /* 한 번은 확대영역, 한 번은 전체 */
-        const r=await det.detect(src);
-        if(r&&r.length&&r[0].rawValue)return hit(r[0].rawValue);
-      }catch(e){}
-      raf=requestAnimationFrame(loop);
-    })();
+    let f=FMT; try{const sp=await BarcodeDetector.getSupportedFormats();f=FMT.filter(x=>sp.includes(x))}catch(e){}
+    det=new BarcodeDetector(f.length?{formats:f}:undefined);
+    startLoop();
   }else{
     try{ await loadJs(ZX); zx=new ZXing.BrowserMultiFormatReader();
-      zx.decodeFromVideoElement(v,r=>{if(r)hit(r.getText())}); }
+      zx.decodeFromVideoElement(v,r=>{if(r&&!$('#cam').classList.contains('hold'))found(r.getText(),null)}); }
     catch(e){ $('#say').textContent='자동 인식이 안 되는 폰이에요. 아래 손으로 입력을 눌러 주세요.'; }
   }
+}
+
+/* 인식 → 멈추고 확인 받기 */
+function found(text,pts){
+  pending=String(text).trim();
+  cancelAnimationFrame(raf); raf=0; clearTimeout(tipT);
+  if(zx){try{zx.reset()}catch(e){}zx=null}
+  try{$('#video').pause()}catch(e){}
+  drawMark(pts);
+  $('#cnum').textContent=pending;
+  $('#cam').classList.add('hold');
+  if(navigator.vibrate)navigator.vibrate(70);
+}
+function resume(){
+  clearMark(); pending='';
+  $('#cam').classList.remove('hold');
+  const v=$('#video');
+  if(stream){ try{v.play()}catch(e){}
+    if(det) startLoop();
+    else { try{ zx=new ZXing.BrowserMultiFormatReader();
+      zx.decodeFromVideoElement(v,r=>{if(r&&!$('#cam').classList.contains('hold'))found(r.getText(),null)}); }catch(e){} }
+    $('#say').textContent='상자 안에 바코드 하나만 넣어 주세요';
+  } else openCam();
 }
 function closeCam(){
   clearTimeout(tipT); cancelAnimationFrame(raf); raf=0;
   if(zx){try{zx.reset()}catch(e){}zx=null}
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-  $('#video').srcObject=null; $('#cam').classList.remove('on');
-}
-function hit(text){
-  if(navigator.vibrate)navigator.vibrate(70);
-  closeCam(); startForm(String(text).trim());
+  det=null; pending=''; clearMark();
+  $('#video').srcObject=null;
+  $('#cam').classList.remove('on'); $('#cam').classList.remove('hold');
 }
 $('#go').onclick=openCam;
 $('#camClose').onclick=()=>{closeCam();show('home')};
+$('#cno').onclick=resume;
+$('#cyes').onclick=()=>{ const c=pending; closeCam(); if(c)startForm(c); };
 $('#camManual').onclick=()=>{
   const v=prompt('바코드 아래 숫자를 입력하세요');
   if(v&&v.trim()){closeCam();startForm(v.trim())}
 };
+window.addEventListener('resize',()=>{ if(stream)sizeMark(); });
 
 /* 입력 */
 function startForm(c){
@@ -344,7 +419,14 @@ function addMonth(m){
   d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
   $('#date').value=ymd(d); usedLast=false; leftDays();
 }
-document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>addMonth(+b.dataset.m));
+function addDay(n){
+  const v=$('#date').value||today();
+  const d=new Date(v+'T00:00:00'); d.setDate(d.getDate()+n);
+  $('#date').value=ymd(d); usedLast=false; leftDays();
+}
+document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.d!==undefined)addDay(+b.dataset.d); else addMonth(+b.dataset.m);
+});
 function leftDays(){
   const v=$('#date').value,el=$('#left');el.className='left';
   if(!v){el.textContent='';return}
