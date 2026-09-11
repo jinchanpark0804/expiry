@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#F6F3EF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>유통기한 정리</title>
+<style>
+  :root{
+    --bg:#F6F3EF; --card:#FFF; --ink:#241F1C; --dim:#8A7F77;
+    --line:#E2DAD2; --go:#1F7A5C; --go2:#155A43; --hot:#C2451E;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg);color:var(--ink);overflow-x:hidden;
+    font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+    font-size:17px;line-height:1.5;-webkit-text-size-adjust:100%;
+  }
+  .pane{display:none;min-height:100dvh;padding:20px 18px calc(20px + env(safe-area-inset-bottom));flex-direction:column}
+  .pane.on{display:flex}
+  button,input{font-family:inherit;color:var(--ink)}
+
+  /* ===== 홈 ===== */
+  .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+  .top h1{font-size:21px;font-weight:700;margin:0;letter-spacing:-.02em}
+  .top .n{font-size:15px;color:var(--dim);font-weight:600}
+  .big{
+    flex:1;margin:18px 0;border:none;border-radius:26px;background:var(--go);color:#fff;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    font-size:30px;font-weight:800;letter-spacing:-.02em;box-shadow:0 10px 0 var(--go2);
+  }
+  .big:active{transform:translateY(5px);box-shadow:0 5px 0 var(--go2)}
+  .big svg{width:74px;height:74px;stroke:#fff;stroke-width:6;fill:none;stroke-linecap:round}
+  .big small{font-size:15px;font-weight:500;opacity:.85}
+  .send{
+    width:100%;padding:20px;border-radius:18px;border:2px solid var(--ink);background:#fff;
+    font-size:19px;font-weight:700;margin-bottom:10px
+  }
+  .send:disabled{border-color:var(--line);color:#BDB4AC}
+  .flat{
+    width:100%;padding:12px;border:none;background:none;color:var(--dim);
+    font-size:15px;font-weight:600;text-decoration:underline;text-underline-offset:3px
+  }
+
+  /* ===== 입력 ===== */
+  .bar{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .bar button{border:none;background:none;font-size:17px;font-weight:700;color:var(--dim);padding:6px 2px}
+  .bar .t{flex:1;text-align:center;font-size:17px;font-weight:700}
+  .bar .sp{width:52px}
+  .tag{
+    background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:18px;
+    font-size:15px;font-weight:700;word-break:break-all;font-variant-numeric:tabular-nums
+  }
+  .tag em{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--dim);margin-bottom:3px}
+  .q{font-size:18px;font-weight:700;margin:0 2px 10px}
+  input[type=date]{
+    width:100%;padding:20px 16px;border:2px solid var(--line);border-radius:16px;background:#fff;
+    font-size:24px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums
+  }
+  input[type=date]:focus{outline:none;border-color:var(--go)}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+  .chips button{padding:15px;border:1px solid var(--line);background:#fff;border-radius:14px;font-size:16px;font-weight:700}
+  .chips button:active{background:#EFE9E2}
+  .left{margin:10px 2px 0;font-size:15px;font-weight:700;color:var(--dim);min-height:22px}
+  .left.warn{color:var(--hot)}
+  .qty{display:flex;align-items:center;gap:12px;margin-top:6px}
+  .qty button{width:84px;height:84px;flex:none;border:2px solid var(--line);background:#fff;border-radius:24px;font-size:40px;font-weight:600;line-height:1}
+  .qty button:active{background:#EFE9E2}
+  .qty input{
+    flex:1;height:84px;text-align:center;font-size:38px;font-weight:800;border:2px solid var(--line);
+    border-radius:24px;background:#fff;font-variant-numeric:tabular-nums
+  }
+  .spacer{flex:1;min-height:16px}
+  .ok{
+    width:100%;padding:24px;border:none;border-radius:20px;background:var(--go);color:#fff;
+    font-size:22px;font-weight:800;box-shadow:0 8px 0 var(--go2)
+  }
+  .ok:active{transform:translateY(4px);box-shadow:0 4px 0 var(--go2)}
+
+  /* ===== 목록 ===== */
+  .item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:9px;display:flex;gap:10px;align-items:center}
+  .item .c{flex:1;min-width:0}
+  .item .b{font-size:15px;font-weight:700;word-break:break-all;font-variant-numeric:tabular-nums}
+  .item .m{font-size:14px;color:var(--dim);margin-top:2px;font-variant-numeric:tabular-nums}
+  .item .x{width:44px;height:44px;flex:none;border:none;background:#F1EBE4;border-radius:12px;font-size:20px;color:var(--dim)}
+  .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .none{color:var(--dim);text-align:center;padding:40px 0;font-size:16px}
+
+  /* ===== 카메라 ===== */
+  #cam{position:fixed;inset:0;background:#000;z-index:50;display:none}
+  #cam.on{display:block}
+  #cam video{width:100%;height:100%;object-fit:cover}
+  .aim{
+    position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);
+    width:74vw;height:74vw;max-width:340px;max-height:340px;
+    border:4px solid #fff;border-radius:24px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)
+  }
+  .say{position:absolute;left:0;right:0;top:calc(42% + 39vw + 20px);text-align:center;color:#fff;font-size:18px;font-weight:700;padding:0 24px;text-shadow:0 2px 6px rgba(0,0,0,.7)}
+  .camfoot{position:absolute;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+  .camfoot button{padding:18px;border:none;border-radius:16px;font-size:18px;font-weight:700}
+  .camfoot .a{background:#fff;color:var(--ink)}
+  .camfoot .b{background:rgba(255,255,255,.18);color:#fff;font-size:15px;padding:13px}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:14px 20px;border-radius:999px;font-size:15px;font-weight:700;
+    z-index:70;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center;
+    display:flex;align-items:center;gap:14px
+  }
+  .toast.on{opacity:1;pointer-events:auto}
+  .toast button{border:none;background:none;color:#FFC46B;font-weight:800;font-size:15px;padding:0}
+  #help{position:fixed;inset:0;background:rgba(36,31,28,.94);color:#fff;z-index:80;display:none;
+    flex-direction:column;justify-content:center;padding:36px 30px calc(36px + env(safe-area-inset-bottom))}
+  #help.on{display:flex}
+  #help h2{font-size:24px;margin:0 0 24px;font-weight:800}
+  #help p{font-size:18px;line-height:1.75;margin:0 0 14px}
+  #help button{margin-top:28px;padding:19px;border:none;border-radius:16px;background:#fff;color:var(--ink);font-size:18px;font-weight:800}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- 홈 -->
+<section class="pane on" id="home">
+  <div class="top"><h1>유통기한 정리</h1><div class="n" id="cnt">0개</div></div>
+  <button class="big" id="go">
+    <svg viewBox="0 0 100 100"><path d="M12 32V16h16M88 32V16H72M12 68v16h16M88 68v16H72M26 50h48"/></svg>
+    바코드 찍기
+    <small>버튼을 누르고 상자에 대기만 하면 돼요</small>
+  </button>
+  <button class="send" id="send" disabled>엑셀 파일 보내기</button>
+  <button class="flat" id="openList">저장한 것 보기</button>
+</section>
+
+<!-- 입력 -->
+<section class="pane" id="form">
+  <div class="bar"><button id="back">← 취소</button><div class="t">언제까지예요?</div><div class="sp"></div></div>
+  <div class="tag"><em>바코드</em><span id="codeV">-</span></div>
+
+  <div class="q">유통기한</div>
+  <input type="date" id="date">
+  <div class="chips">
+    <button data-m="1">1개월 뒤</button>
+    <button data-m="6">6개월 뒤</button>
+    <button data-m="12">1년 뒤</button>
+    <button data-m="24">2년 뒤</button>
+  </div>
+  <div class="left" id="left"></div>
+
+  <div class="q" style="margin-top:22px">개수</div>
+  <div class="qty">
+    <button id="minus">−</button>
+    <input type="number" id="qty" value="1" min="0" inputmode="numeric" pattern="[0-9]*">
+    <button id="plus">+</button>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="ok" id="save">저장하고 다음 찍기</button>
+  <button class="flat" id="saveStop">저장하고 그만하기</button>
+</section>
+
+<!-- 목록 -->
+<section class="pane" id="list">
+  <div class="bar"><button id="back2">← 뒤로</button><div class="t">저장한 것</div><div class="sp"></div></div>
+  <div class="scroll" id="rows"></div>
+  <button class="flat" id="wipe" style="color:#C2451E">전부 지우기</button>
+</section>
+
+<!-- 카메라 -->
+<div id="cam">
+  <video id="video" playsinline muted></video>
+  <div class="aim"></div>
+  <div class="say" id="say">상자 안에 바코드를 넣어 주세요</div>
+  <div class="camfoot">
+    <button class="a" id="camClose">그만 찍기</button>
+    <button class="b" id="camManual">잘 안 읽혀요 · 손으로 입력</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastT"></span><button id="undo" style="display:none">되돌리기</button></div>
+
+<div id="help">
+  <h2>이렇게 쓰면 돼요</h2>
+  <p>1. 초록 버튼을 누르고 바코드를 비추세요.</p>
+  <p>2. 유통기한 날짜와 개수를 고르세요.</p>
+  <p>3. 다 끝나면 <b>엑셀 파일 보내기</b>를 눌러 카톡으로 보내세요.</p>
+  <button id="helpOk">알겠어요</button>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const KEY='expiry.simple.v1';
+let rows=[], code='', lastRemoved=null;
+
+/* 저장소 */
+function load(){try{rows=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){rows=[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(rows))}catch(e){}}
+const p2=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+function stamp(){const d=new Date();return ymd(d)+' '+p2(d.getHours())+':'+p2(d.getMinutes())}
+
+function toast(msg,undoFn){
+  $('#toastT').textContent=msg;
+  const u=$('#undo');
+  if(undoFn){u.style.display='';u.onclick=()=>{undoFn();$('#toast').classList.remove('on')}}
+  else u.style.display='none';
+  const t=$('#toast');t.classList.add('on');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),undoFn?4000:2000);
+}
+function show(id){document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===id))}
+function refresh(){
+  $('#cnt').textContent=rows.length+'개';
+  $('#send').disabled=!rows.length;
+  const el=$('#rows');
+  if(!rows.length){el.innerHTML='<div class="none">아직 저장한 게 없어요</div>';return}
+  el.innerHTML=rows.slice().reverse().map(r=>
+    '<div class="item"><div class="c"><div class="b">'+esc(r.code)+'</div>'+
+    '<div class="m">'+(r.date||'-')+' · '+r.qty+'개</div></div>'+
+    '<button class="x" data-id="'+r.id+'">×</button></div>').join('');
+  el.querySelectorAll('.x').forEach(b=>b.onclick=()=>{
+    const i=rows.findIndex(r=>String(r.id)===b.dataset.id);
+    if(i<0)return; const gone=rows.splice(i,1)[0]; save(); refresh();
+    toast('1개 지웠어요',()=>{rows.splice(i,0,gone);save();refresh()});
+  });
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* 라이브러리 로더 */
+function loadJs(urls){return new Promise((ok,ng)=>{(function n(i){
+  if(i>=urls.length)return ng();const s=document.createElement('script');
+  s.src=urls[i];s.onload=ok;s.onerror=()=>n(i+1);document.head.appendChild(s)})(0)})}
+const ZX=['https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js',
+          'https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js'];
+const XL=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+          'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'];
+const FMT=['qr_code','data_matrix','pdf417','aztec','code_128','code_39','ean_13','ean_8','itf','codabar','upc_a','upc_e'];
+
+/* 카메라 */
+let stream=null,raf=0,zx=null,tipT=0;
+async function openCam(){
+  $('#cam').classList.add('on');
+  $('#say').textContent='카메라를 켜는 중...';
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});
+  }catch(e){ closeCam(); toast('카메라를 켤 수 없어요'); return; }
+  const v=$('#video'); v.srcObject=stream; await v.play();
+  $('#say').textContent='상자 안에 바코드를 넣어 주세요';
+  tipT=setTimeout(()=>$('#say').textContent='천천히 가까이/멀리 움직여 보세요',7000);
+
+  if('BarcodeDetector' in window){
+    let f=FMT; try{const s=await BarcodeDetector.getSupportedFormats();f=FMT.filter(x=>s.includes(x))}catch(e){}
+    const det=new BarcodeDetector(f.length?{formats:f}:undefined);
+    (async function tick(){
+      if(!stream)return;
+      try{const r=await det.detect(v); if(r&&r.length)return hit(r[0].rawValue)}catch(e){}
+      raf=requestAnimationFrame(tick);
+    })();
+  }else{
+    try{ await loadJs(ZX); zx=new ZXing.BrowserMultiFormatReader();
+      zx.decodeFromVideoElement(v,r=>{if(r)hit(r.getText())}); }
+    catch(e){ $('#say').textContent='자동 인식이 안 되는 폰이에요. 아래 손으로 입력을 눌러 주세요.'; }
+  }
+}
+function closeCam(){
+  clearTimeout(tipT); cancelAnimationFrame(raf); raf=0;
+  if(zx){try{zx.reset()}catch(e){}zx=null}
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  $('#video').srcObject=null; $('#cam').classList.remove('on');
+}
+function hit(text){
+  if(navigator.vibrate)navigator.vibrate(70);
+  closeCam(); startForm(text.trim());
+}
+$('#go').onclick=openCam;
+$('#camClose').onclick=()=>{closeCam();show('home')};
+$('#camManual').onclick=()=>{
+  const v=prompt('바코드 아래 숫자를 입력하세요');
+  if(v&&v.trim()){closeCam();startForm(v.trim())}
+};
+
+/* 입력 */
+function startForm(c){
+  code=c; $('#codeV').textContent=c;
+  $('#qty').value=1;
+  $('#date').value=''; leftDays();
+  show('form');
+  const dup=rows.filter(r=>r.code===c).length;
+  if(dup)toast('전에 '+dup+'번 찍은 바코드예요');
+}
+function addMonth(m){
+  const d=new Date(); const day=d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth()+m);
+  d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
+  $('#date').value=ymd(d); leftDays();
+}
+document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>addMonth(+b.dataset.m));
+function leftDays(){
+  const v=$('#date').value,el=$('#left');el.className='left';
+  if(!v){el.textContent='';return}
+  const t=new Date();t.setHours(0,0,0,0);
+  const n=Math.round((new Date(v+'T00:00:00')-t)/86400000);
+  if(n<0){el.textContent=(-n)+'일 지났어요';el.classList.add('warn')}
+  else if(n===0){el.textContent='오늘까지예요';el.classList.add('warn')}
+  else{el.textContent=n+'일 남았어요';if(n<=30)el.classList.add('warn')}
+}
+$('#date').onchange=leftDays;
+const qv=()=>Math.max(0,parseInt($('#qty').value||'0',10)||0);
+$('#plus').onclick=()=>$('#qty').value=qv()+1;
+$('#minus').onclick=()=>$('#qty').value=Math.max(0,qv()-1);
+$('#back').onclick=()=>show('home');
+
+function doSave(){
+  if(!$('#date').value){
+    toast('유통기한을 먼저 골라 주세요');
+    const d=$('#date'); if(d.showPicker)try{d.showPicker()}catch(e){} else d.focus();
+    return false;
+  }
+  rows.push({id:Date.now(),code:code,date:$('#date').value,qty:qv(),at:stamp()});
+  save();refresh();
+  if(navigator.vibrate)navigator.vibrate(30);
+  return true;
+}
+$('#save').onclick=()=>{ if(!doSave())return;
+  const mine=rows[rows.length-1];
+  toast('저장했어요',()=>{rows=rows.filter(r=>r.id!==mine.id);save();refresh();closeCam();show('home')});
+  openCam();
+};
+$('#saveStop').onclick=()=>{ if(!doSave())return; show('home'); toast('저장했어요'); };
+
+/* 목록 */
+$('#openList').onclick=()=>{refresh();show('list')};
+$('#back2').onclick=()=>show('home');
+$('#wipe').onclick=()=>{
+  if(!rows.length)return;
+  if(confirm(rows.length+'개를 전부 지울까요?\n엑셀로 보내지 않았으면 되돌릴 수 없어요.')){
+    rows=[];save();refresh();toast('전부 지웠어요');
+  }
+};
+
+/* 엑셀 보내기 */
+$('#send').onclick=async()=>{
+  if(!rows.length)return;
+  $('#send').textContent='만드는 중...';
+  try{
+    if(!window.XLSX)await loadJs(XL);
+    const data=rows.map(r=>({'바코드':r.code,'유통기한':r.date,'개수':r.qty,'등록일시':r.at}));
+    const ws=XLSX.utils.json_to_sheet(data,{header:['바코드','유통기한','개수','등록일시']});
+    ws['!cols']=[{wch:28},{wch:12},{wch:7},{wch:18}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'유통기한');
+    const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const d=new Date();
+    const name='유통기한_'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.xlsx';
+    const blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const file=new File([blob],name,{type:blob.type});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:name});
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      toast('다운로드 폴더에 저장됐어요');
+    }
+  }catch(e){ if(e&&e.name!=='AbortError')toast('보내기에 실패했어요. 인터넷을 확인해 주세요'); }
+  $('#send').textContent='엑셀 파일 보내기';
+};
+
+/* 첫 실행 안내 */
+$('#helpOk').onclick=()=>{$('#help').classList.remove('on');try{localStorage.setItem('expiry.seen','1')}catch(e){}};
+try{ if(!localStorage.getItem('expiry.seen'))$('#help').classList.add('on'); }catch(e){}
+
+load();refresh();
+window.addEventListener('pagehide',closeCam);
+</script>
+</body>
+</html>
