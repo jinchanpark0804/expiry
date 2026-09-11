@@ -61,10 +61,11 @@
     font-size:clamp(20px,6vw,24px);font-weight:700;text-align:center;font-variant-numeric:tabular-nums
   }
   input[type=date]:focus{outline:none;border-color:var(--go)}
-  .chips{display:grid;grid-template-columns:1fr 1fr 1.5fr 1.5fr;gap:7px;margin-top:9px}
-  .chips button{padding:14px 2px;border:1px solid var(--line);background:#fff;border-radius:13px;
-    font-size:clamp(13px,3.8vw,15px);font-weight:700;white-space:nowrap}
-  .chips button.day{font-size:26px;font-weight:600;line-height:1;color:var(--go);padding:10px 2px}
+  .chips{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;margin-top:10px;align-items:center}
+  .chips .rl{font-size:17px;font-weight:700;color:var(--dim);padding:0 6px 0 2px;white-space:nowrap}
+  .chips button{width:100%;padding:15px 0;border:1px solid var(--line);background:#fff;border-radius:14px;
+    font-size:27px;font-weight:600;line-height:1;color:var(--go)}
+  .chips button:active{background:#EFE9E2}
   .chips button:active{background:#EFE9E2}
   .left{margin:9px 2px 0;font-size:15px;font-weight:700;color:var(--dim);min-height:22px}
   .left.warn{color:var(--hot)}
@@ -164,10 +165,12 @@
   <div class="q">유통기한</div>
   <input type="date" id="date">
   <div class="chips">
-    <button class="day" data-d="-1" aria-label="하루 앞으로">−</button>
-    <button class="day" data-d="1" aria-label="하루 뒤로">+</button>
-    <button data-m="1">1개월 뒤</button>
-    <button data-m="6">6개월 뒤</button>
+    <span class="rl">일자</span>
+    <button data-d="-1" aria-label="하루 앞으로">−</button>
+    <button data-d="1" aria-label="하루 뒤로">+</button>
+    <span class="rl">개월</span>
+    <button data-mo="-1" aria-label="한 달 앞으로">−</button>
+    <button data-mo="1" aria-label="한 달 뒤로">+</button>
   </div>
   <div class="left" id="left"></div>
 
@@ -413,8 +416,9 @@ function startForm(c){
   const dup=rows.filter(r=>r.code===c).length;
   if(dup)toast('전에 '+dup+'번 찍은 바코드예요');
 }
-function addMonth(m){
-  const d=new Date(); const day=d.getDate();
+function addMonth(m){                     /* 현재 날짜 기준 개월 가감 */
+  const v=$('#date').value||today();
+  const d=new Date(v+'T00:00:00'), day=d.getDate();
   d.setDate(1); d.setMonth(d.getMonth()+m);
   d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
   $('#date').value=ymd(d); usedLast=false; leftDays();
@@ -425,7 +429,7 @@ function addDay(n){
   $('#date').value=ymd(d); usedLast=false; leftDays();
 }
 document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{
-  if(b.dataset.d!==undefined)addDay(+b.dataset.d); else addMonth(+b.dataset.m);
+  if(b.dataset.d!==undefined)addDay(+b.dataset.d); else addMonth(+b.dataset.mo);
 });
 function leftDays(){
   const v=$('#date').value,el=$('#left');el.className='left';
