@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#F6F3EF">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>유통기한 정리</title>
 <style>
   :root{
@@ -29,13 +28,13 @@
   .top h1{font-size:21px;font-weight:700;margin:0;letter-spacing:-.02em}
   .top .n{font-size:15px;color:var(--dim);font-weight:600}
   .big{
-    flex:1;margin:18px 0;border:none;border-radius:26px;background:var(--go);color:#fff;
+    flex:1;min-height:34vh;margin:18px 0;border:none;border-radius:26px;background:var(--go);color:#fff;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-    font-size:30px;font-weight:800;letter-spacing:-.02em;box-shadow:0 10px 0 var(--go2);
+    font-size:clamp(24px,7.5vw,32px);font-weight:800;letter-spacing:-.02em;box-shadow:0 10px 0 var(--go2);
   }
   .big:active{transform:translateY(5px);box-shadow:0 5px 0 var(--go2)}
-  .big svg{width:74px;height:74px;stroke:#fff;stroke-width:6;fill:none;stroke-linecap:round}
-  .big small{font-size:15px;font-weight:500;opacity:.85}
+  .big svg{width:min(74px,18vw);height:min(74px,18vw);stroke:#fff;stroke-width:6;fill:none;stroke-linecap:round}
+  .big small{font-size:15px;font-weight:500;opacity:.85;padding:0 18px;text-align:center}
   .send{
     width:100%;padding:20px;border-radius:18px;border:2px solid var(--ink);background:#fff;
     font-size:19px;font-weight:700;margin-bottom:10px
@@ -59,7 +58,7 @@
   .q{font-size:18px;font-weight:700;margin:0 2px 10px}
   input[type=date]{
     width:100%;padding:20px 16px;border:2px solid var(--line);border-radius:16px;background:#fff;
-    font-size:24px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums
+    font-size:clamp(20px,6vw,24px);font-weight:700;text-align:center;font-variant-numeric:tabular-nums
   }
   input[type=date]:focus{outline:none;border-color:var(--go)}
   .chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
@@ -67,12 +66,13 @@
   .chips button:active{background:#EFE9E2}
   .left{margin:10px 2px 0;font-size:15px;font-weight:700;color:var(--dim);min-height:22px}
   .left.warn{color:var(--hot)}
+  .left i{font-style:normal;font-weight:600;opacity:.75}
   .qty{display:flex;align-items:center;gap:12px;margin-top:6px}
-  .qty button{width:84px;height:84px;flex:none;border:2px solid var(--line);background:#fff;border-radius:24px;font-size:40px;font-weight:600;line-height:1}
+  .qty button{width:min(84px,22vw);height:min(84px,22vw);flex:none;border:2px solid var(--line);background:#fff;border-radius:24px;font-size:38px;font-weight:600;line-height:1}
   .qty button:active{background:#EFE9E2}
   .qty input{
-    flex:1;height:84px;text-align:center;font-size:38px;font-weight:800;border:2px solid var(--line);
-    border-radius:24px;background:#fff;font-variant-numeric:tabular-nums
+    flex:1;height:min(84px,22vw);text-align:center;font-size:clamp(28px,9vw,38px);font-weight:800;
+    border:2px solid var(--line);border-radius:24px;background:#fff;font-variant-numeric:tabular-nums
   }
   .spacer{flex:1;min-height:16px}
   .ok{
@@ -90,20 +90,27 @@
   .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .none{color:var(--dim);text-align:center;padding:40px 0;font-size:16px}
 
-  /* ===== 카메라 ===== */
+  /* ===== 카메라 (화면 크기에 맞춰 자동 배치) ===== */
   #cam{position:fixed;inset:0;background:#000;z-index:50;display:none}
   #cam.on{display:block}
-  #cam video{width:100%;height:100%;object-fit:cover}
-  .aim{
-    position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);
-    width:74vw;height:74vw;max-width:340px;max-height:340px;
-    border:4px solid #fff;border-radius:24px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)
+  #cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+  .ovl{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))
   }
-  .say{position:absolute;left:0;right:0;top:calc(42% + 39vw + 20px);text-align:center;color:#fff;font-size:18px;font-weight:700;padding:0 24px;text-shadow:0 2px 6px rgba(0,0,0,.7)}
-  .camfoot{position:absolute;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
-  .camfoot button{padding:18px;border:none;border-radius:16px;font-size:18px;font-weight:700}
+  .aimwrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
+  .aim{
+    width:min(80vw,52vh);height:min(80vw,52vh);
+    border:4px solid #fff;border-radius:22px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)
+  }
+  .say{
+    color:#fff;font-size:clamp(15px,4.4vw,18px);font-weight:700;text-align:center;
+    margin:16px 0 12px;text-shadow:0 2px 6px rgba(0,0,0,.7);flex:none
+  }
+  .camfoot{width:100%;display:flex;flex-direction:column;gap:10px;flex:none}
+  .camfoot button{padding:17px;border:none;border-radius:16px;font-size:17px;font-weight:700}
   .camfoot .a{background:#fff;color:var(--ink)}
-  .camfoot .b{background:rgba(255,255,255,.18);color:#fff;font-size:15px;padding:13px}
+  .camfoot .b{background:rgba(255,255,255,.2);color:#fff;font-size:15px;padding:13px}
 
   .toast{
     position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);
@@ -132,7 +139,7 @@
     바코드 찍기
     <small>버튼을 누르고 상자에 대기만 하면 돼요</small>
   </button>
-  <button class="send" id="send" disabled>엑셀 파일 보내기</button>
+  <button class="send" id="send" disabled>엑셀 파일 내려받기</button>
   <button class="flat" id="openList">저장한 것 보기</button>
 </section>
 
@@ -173,11 +180,13 @@
 <!-- 카메라 -->
 <div id="cam">
   <video id="video" playsinline muted></video>
-  <div class="aim"></div>
-  <div class="say" id="say">상자 안에 바코드를 넣어 주세요</div>
-  <div class="camfoot">
-    <button class="a" id="camClose">그만 찍기</button>
-    <button class="b" id="camManual">잘 안 읽혀요 · 손으로 입력</button>
+  <div class="ovl">
+    <div class="aimwrap"><div class="aim" id="aim"></div></div>
+    <div class="say" id="say">상자 안에 바코드를 넣어 주세요</div>
+    <div class="camfoot">
+      <button class="a" id="camClose">그만 찍기</button>
+      <button class="b" id="camManual">잘 안 읽혀요 · 손으로 입력</button>
+    </div>
   </div>
 </div>
 
@@ -187,20 +196,25 @@
   <h2>이렇게 쓰면 돼요</h2>
   <p>1. 초록 버튼을 누르고 바코드를 비추세요.</p>
   <p>2. 유통기한 날짜와 개수를 고르세요.</p>
-  <p>3. 다 끝나면 <b>엑셀 파일 보내기</b>를 눌러 카톡으로 보내세요.</p>
+  <p>3. 다 끝나면 <b>엑셀 파일 내려받기</b>를 누르세요.</p>
   <button id="helpOk">알겠어요</button>
 </div>
 
 <script>
 const $=s=>document.querySelector(s);
-const KEY='expiry.simple.v1';
-let rows=[], code='', lastRemoved=null;
+const KEY='expiry.simple.v1', DKEY='expiry.lastDate';
+let rows=[], code='', lastDate='', usedLast=false;
 
 /* 저장소 */
-function load(){try{rows=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){rows=[]}}
+function load(){
+  try{rows=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){rows=[]}
+  try{lastDate=localStorage.getItem(DKEY)||''}catch(e){lastDate=''}
+}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(rows))}catch(e){}}
+function saveLast(d){lastDate=d;try{localStorage.setItem(DKEY,d)}catch(e){}}
 const p2=n=>String(n).padStart(2,'0');
 const ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const today=()=>ymd(new Date());
 function stamp(){const d=new Date();return ymd(d)+' '+p2(d.getHours())+':'+p2(d.getMinutes())}
 
 function toast(msg,undoFn){
@@ -240,24 +254,54 @@ const XL=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
 const FMT=['qr_code','data_matrix','pdf417','aztec','code_128','code_39','ean_13','ean_8','itf','codabar','upc_a','upc_e'];
 
 /* 카메라 */
-let stream=null,raf=0,zx=null,tipT=0;
+let stream=null,raf=0,zx=null,tipT=0,tick=0;
+const cv=document.createElement('canvas'), cx=cv.getContext('2d',{willReadFrequently:true});
+
+/* 화면의 흰 사각형 영역만 잘라 적당한 크기로 줄여서 인식에 사용 */
+function cropAim(v){
+  const vw=v.videoWidth, vh=v.videoHeight;
+  if(!vw||!vh) return null;
+  const vr=v.getBoundingClientRect(), ar=$('#aim').getBoundingClientRect();
+  const scale=Math.max(vr.width/vw, vr.height/vh);           // object-fit:cover
+  const offX=(vr.width-vw*scale)/2, offY=(vr.height-vh*scale)/2;
+  const pad=0.12;
+  let sw=ar.width/scale*(1+pad*2), sh=ar.height/scale*(1+pad*2);
+  let sx=(ar.left-vr.left-offX)/scale-ar.width/scale*pad;
+  let sy=(ar.top-vr.top-offY)/scale-ar.height/scale*pad;
+  sx=Math.max(0,Math.min(sx,vw-1)); sy=Math.max(0,Math.min(sy,vh-1));
+  sw=Math.min(sw,vw-sx); sh=Math.min(sh,vh-sy);
+  if(sw<40||sh<40) return null;
+  const cap=1400, k=Math.min(1,cap/Math.max(sw,sh));          // 너무 크면 축소
+  cv.width=Math.round(sw*k); cv.height=Math.round(sh*k);
+  cx.drawImage(v,sx,sy,sw,sh,0,0,cv.width,cv.height);
+  return cv;
+}
+
 async function openCam(){
   $('#cam').classList.add('on');
   $('#say').textContent='카메라를 켜는 중...';
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
   }catch(e){ closeCam(); toast('카메라를 켤 수 없어요'); return; }
   const v=$('#video'); v.srcObject=stream; await v.play();
   $('#say').textContent='상자 안에 바코드를 넣어 주세요';
-  tipT=setTimeout(()=>$('#say').textContent='천천히 가까이/멀리 움직여 보세요',7000);
+  clearTimeout(tipT);
+  tipT=setTimeout(()=>{if(stream)$('#say').textContent='천천히 가까이·멀리 움직여 보세요'},7000);
 
   if('BarcodeDetector' in window){
     let f=FMT; try{const s=await BarcodeDetector.getSupportedFormats();f=FMT.filter(x=>s.includes(x))}catch(e){}
     const det=new BarcodeDetector(f.length?{formats:f}:undefined);
-    (async function tick(){
+    tick=0;
+    (async function loop(){
       if(!stream)return;
-      try{const r=await det.detect(v); if(r&&r.length)return hit(r[0].rawValue)}catch(e){}
-      raf=requestAnimationFrame(tick);
+      try{
+        let src=v;
+        if(tick++%2===0){ const c=cropAim(v); if(c) src=c; }   /* 한 번은 확대영역, 한 번은 전체 */
+        const r=await det.detect(src);
+        if(r&&r.length&&r[0].rawValue)return hit(r[0].rawValue);
+      }catch(e){}
+      raf=requestAnimationFrame(loop);
     })();
   }else{
     try{ await loadJs(ZX); zx=new ZXing.BrowserMultiFormatReader();
@@ -273,7 +317,7 @@ function closeCam(){
 }
 function hit(text){
   if(navigator.vibrate)navigator.vibrate(70);
-  closeCam(); startForm(text.trim());
+  closeCam(); startForm(String(text).trim());
 }
 $('#go').onclick=openCam;
 $('#camClose').onclick=()=>{closeCam();show('home')};
@@ -286,8 +330,9 @@ $('#camManual').onclick=()=>{
 function startForm(c){
   code=c; $('#codeV').textContent=c;
   $('#qty').value=1;
-  $('#date').value=''; leftDays();
-  show('form');
+  usedLast=!!lastDate;
+  $('#date').value=lastDate||today();       /* 처음엔 오늘, 이후엔 직전 날짜 */
+  leftDays(); show('form');
   const dup=rows.filter(r=>r.code===c).length;
   if(dup)toast('전에 '+dup+'번 찍은 바코드예요');
 }
@@ -295,7 +340,7 @@ function addMonth(m){
   const d=new Date(); const day=d.getDate();
   d.setDate(1); d.setMonth(d.getMonth()+m);
   d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
-  $('#date').value=ymd(d); leftDays();
+  $('#date').value=ymd(d); usedLast=false; leftDays();
 }
 document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>addMonth(+b.dataset.m));
 function leftDays(){
@@ -303,24 +348,27 @@ function leftDays(){
   if(!v){el.textContent='';return}
   const t=new Date();t.setHours(0,0,0,0);
   const n=Math.round((new Date(v+'T00:00:00')-t)/86400000);
-  if(n<0){el.textContent=(-n)+'일 지났어요';el.classList.add('warn')}
-  else if(n===0){el.textContent='오늘까지예요';el.classList.add('warn')}
-  else{el.textContent=n+'일 남았어요';if(n<=30)el.classList.add('warn')}
+  let s;
+  if(n<0){s=(-n)+'일 지났어요';el.classList.add('warn')}
+  else if(n===0){s='오늘까지예요';el.classList.add('warn')}
+  else{s=n+'일 남았어요';if(n<=30)el.classList.add('warn')}
+  el.innerHTML=esc(s)+(usedLast&&v===lastDate?' <i>· 직전과 같은 날짜</i>':'');
 }
-$('#date').onchange=leftDays;
+$('#date').onchange=()=>{usedLast=false;leftDays()};
 const qv=()=>Math.max(0,parseInt($('#qty').value||'0',10)||0);
 $('#plus').onclick=()=>$('#qty').value=qv()+1;
 $('#minus').onclick=()=>$('#qty').value=Math.max(0,qv()-1);
 $('#back').onclick=()=>show('home');
 
 function doSave(){
-  if(!$('#date').value){
+  const d=$('#date').value;
+  if(!d){
     toast('유통기한을 먼저 골라 주세요');
-    const d=$('#date'); if(d.showPicker)try{d.showPicker()}catch(e){} else d.focus();
+    const el=$('#date'); if(el.showPicker)try{el.showPicker()}catch(e){} else el.focus();
     return false;
   }
-  rows.push({id:Date.now(),code:code,date:$('#date').value,qty:qv(),at:stamp()});
-  save();refresh();
+  rows.push({id:Date.now(),code:code,date:d,qty:qv(),at:stamp()});
+  saveLast(d); save(); refresh();
   if(navigator.vibrate)navigator.vibrate(30);
   return true;
 }
@@ -336,36 +384,32 @@ $('#openList').onclick=()=>{refresh();show('list')};
 $('#back2').onclick=()=>show('home');
 $('#wipe').onclick=()=>{
   if(!rows.length)return;
-  if(confirm(rows.length+'개를 전부 지울까요?\n엑셀로 보내지 않았으면 되돌릴 수 없어요.')){
+  if(confirm(rows.length+'개를 전부 지울까요?\n엑셀로 내려받지 않았으면 되돌릴 수 없어요.')){
     rows=[];save();refresh();toast('전부 지웠어요');
   }
 };
 
-/* 엑셀 보내기 */
+/* 엑셀 내려받기 */
 $('#send').onclick=async()=>{
   if(!rows.length)return;
-  $('#send').textContent='만드는 중...';
+  const btn=$('#send'); btn.disabled=true; btn.textContent='만드는 중...';
   try{
     if(!window.XLSX)await loadJs(XL);
     const data=rows.map(r=>({'바코드':r.code,'유통기한':r.date,'개수':r.qty,'등록일시':r.at}));
     const ws=XLSX.utils.json_to_sheet(data,{header:['바코드','유통기한','개수','등록일시']});
     ws['!cols']=[{wch:28},{wch:12},{wch:7},{wch:18}];
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'유통기한');
-    const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     const d=new Date();
-    const name='유통기한_'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.xlsx';
+    const name='유통기한_'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'_'+p2(d.getHours())+p2(d.getMinutes())+'.xlsx';
+    const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     const blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    const file=new File([blob],name,{type:blob.type});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:name});
-    }else{
-      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
-      document.body.appendChild(a);a.click();a.remove();
-      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-      toast('다운로드 폴더에 저장됐어요');
-    }
-  }catch(e){ if(e&&e.name!=='AbortError')toast('보내기에 실패했어요. 인터넷을 확인해 주세요'); }
-  $('#send').textContent='엑셀 파일 보내기';
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download=name; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    toast('다운로드 폴더에 저장됐어요');
+  }catch(e){ toast('만들지 못했어요. 인터넷을 확인해 주세요'); }
+  btn.textContent='엑셀 파일 내려받기'; btn.disabled=!rows.length;
 };
 
 /* 첫 실행 안내 */
